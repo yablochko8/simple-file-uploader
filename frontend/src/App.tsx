@@ -13,8 +13,8 @@ const getData = async () => {
     },
   });
   const json = await response.json();
-  console.log("The server response was:", json.message);
-  return json.message; // unusued here
+  console.log("The server response was:", json.buckets);
+  return json.buckets; // unusued here
 };
 
 const postDataAndDisplayResponse = async (
