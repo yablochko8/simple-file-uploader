@@ -14,31 +14,46 @@ datasource db {
 }
 
 model Person {
-  id        Int       @id @default(autoincrement())
-  name      String    @unique
-  nickname  String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime? @updatedAt
+  id            Int       @id @default(autoincrement())
+  name          String    @unique
+  nickname      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime? @updatedAt
 
   // relationships
-  things Thing[]
+  myFiles       File[]
+  sharedFiles   FilePersonShared[]
 
   @@map("person")
 }
 
-model Thing {
-  id        Int       @id @default(autoincrement())
-  name      String    @unique
-  genre     String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime? @updatedAt
-  rating    Int       @default(0)
+model File {
+  id            Int       @id @default(autoincrement())
+  name          String
+  storagePath   String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime? @updatedAt
 
   // relational ids
-  personId Int
+  personId      Int
 
   // relationships
-  person Person @relation(fields: [personId], references: [id])
+  owner         Person @relation(fields: [personId], references: [id])
+  sharedWith    FilePersonShared[]
 
-  @@map("thing")
+  @@map("file")
+}
+
+// Many-to-many table for Person and File caused by SHARING
+model FilePersonShared {
+  id            Int       @id @default(autoincrement())
+  fileId        Int
+  personId      Int
+  createdAt     DateTime  @default(now())
+
+  // relationships
+  file          File @relation(fields: [fileId], references: [id])
+  person        Person @relation(fields: [personId], references: [id])
+
+  @@map("file_person_shared")
 }
