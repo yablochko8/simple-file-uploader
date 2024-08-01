@@ -28,7 +28,7 @@ const s3 = new S3({
 
 const multerUpload = multer({
   limits: {
-    filesize: 5 * 1024 * 1024,
+    fileSize: 5 * 1024 * 1024,
   },
   storage: multerS3({
     s3: s3,
