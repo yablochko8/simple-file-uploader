@@ -35,6 +35,25 @@ const postDataAndDisplayResponse = async (
   return json.messages; // unused here
 };
 
+const getFileForUpload = async (fileName: string) => {
+  const filePath = fileName;
+  const response = await fetch(filePath);
+  const blob = await response.blob();
+  const file = new File([blob], fileName, { type: blob.type });
+  return file
+};
+const sendFileForUpload = async (file: File) => {
+  const formData = new FormData()
+  formData.append("thing", file)
+  const response = await fetch(`${serverPath}/upload`, {
+    method: "POST",
+    body: formData,
+  });
+  const json = await response.json();
+  console.log("The server response was:", json);
+  return json; // unused here
+};
+
 function App() {
   const [submittedValue, setSubmittedValue] = useState("");
   const [valuesFromServer, setValuesFromServer] = useState(["starting data"]);
@@ -55,6 +74,15 @@ function App() {
         }}
       />
       <br />
+      <button
+        onClick={() =>
+          getFileForUpload("batou.png").then(sendFileForUpload)
+        }
+      >
+        Send Image file for upload.      </button>
+      <br />
+      <br />
+
       <button
         onClick={() =>
           postDataAndDisplayResponse(submittedValue, setValuesFromServer)

@@ -26,7 +26,7 @@ const s3 = new S3({
   },
 });
 
-const upload = multer({
+const multerUpload = multer({
   limits: {
     filesize: 5 * 1024 * 1024,
   },
@@ -53,6 +53,12 @@ app.get("/", async (req, res) => {
   console.log("bucketNames", bucketNames);
   res.json({ buckets: bucketNames });
 });
+
+app.post("/upload", multerUpload.single("thing"), async (req, res) => {
+  res.send({ message: "File uploaded" });
+});
+
+// BOILERPLATE MATERIAL
 
 const storedValues: string[] = [];
 
