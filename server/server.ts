@@ -4,7 +4,7 @@ import multer, { FileArray, File } from "multer";
 import multerS3 from "multer-s3";
 import { S3 } from "@aws-sdk/client-s3";
 import dotenv from "dotenv";
-import { newFileInStorage, seeFilesInStorage } from "./utils/dbFunctions";
+import { saveUploadDetailsToDB, seeFilesInStorage } from "./utils/dbFunctions";
 dotenv.config();
 
 interface MulterRequest extends Request {
@@ -33,7 +33,7 @@ const s3 = new S3({
 
 const multerUpload = multer({
   limits: {
-    fileSize: 5 * 1024 * 1024,
+    fileSize: 50 * 1024 * 1024, // 50 MB max size for upload
   },
   storage: multerS3({
     s3: s3,
@@ -53,7 +53,6 @@ app.get("/", async (req, res) => {
   if (data) {
     console.log("Response from AWS successfully recorded.");
   }
-  console.log("data object is", data);
   const bucketNames = data.Buckets?.map((bucket) => bucket.Name) || [];
   console.log("bucketNames", bucketNames);
   res.json({ buckets: bucketNames });
@@ -67,7 +66,6 @@ app.get("/files/person/:personId", async (req, res) => {
   if (data) {
     console.log("Response from Database was successful.");
   }
-  console.log("data object is", data);
   res.json({ myfiles: data });
 });
 
@@ -78,9 +76,7 @@ app.post(
     // Console log the file details
     if (req.file) {
       console.log("Will now attempt to send to database");
-      const newItem = await newFileInStorage(req.file, 1);
-      console.log("database response:", newItem);
-      console.log("/upload endpoint... File details:", req.file);
+      const newItem = await saveUploadDetailsToDB(req.file, 1);
     } else {
       console.log("/upload endpoint... No file found.");
     }
@@ -88,6 +84,19 @@ app.post(
     res.send({ message: "File uploaded" });
   }
 );
+
+app.post("/download/:bucket/:key", async (req, res) => {
+  console.log("download/:bucket/:key POST endpoint called.");
+  const bucket = req.params.bucket;
+  const key = req.params.key;
+  console.log(`/download/${bucket}/${key} POST endpoint called.`);
+  const data = await s3.getObject({ Bucket: bucket, Key: key });
+  if (data.Body) {
+    const fileBuffer = await data.Body?.transformToByteArray();
+    res.end(fileBuffer, "binary");
+  }
+  // res.send(data);
+});
 
 // TEST ENDPOINT PROBABABLY NOT NEEDED
 
@@ -99,6 +108,8 @@ app.get("/files/:bucketName", async (req, res) => {
   if (data) {
     console.log("Response from AWS successfully recorded.");
   }
+  console.log("##############################");
+
   console.log("data object is", data);
   const bucketNames = data.Buckets?.map((bucket) => bucket.Name) || [];
   console.log("bucketNames", bucketNames);

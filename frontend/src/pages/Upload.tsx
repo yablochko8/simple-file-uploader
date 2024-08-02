@@ -49,7 +49,7 @@ const Upload: React.FC = () => {
   const handleUpload = async () => {
     if (file) {
       // TODO: Implement file upload logic
-      console.log("Attempting to upload file:", file.name, file.size, "(FAKE NEWS)");
+      console.log("Attempting to upload file:", file.name, file.size);
       const response = await sendFileForUpload(file);
       console.log("The server response was:", response);
     }
