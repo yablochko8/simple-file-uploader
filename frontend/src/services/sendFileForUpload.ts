@@ -8,6 +8,5 @@ export const sendFileForUpload = async (file: File) => {
     body: formData,
   });
   const json = await response.json();
-  console.log("The server response was:", json);
-  return json; // unused here
+  return json;
 };
