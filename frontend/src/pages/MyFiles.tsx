@@ -3,6 +3,7 @@ import { getFiles, MyFile } from '../services/getFiles';
 import { getSingleFile } from '../services/getSingleFile';
 import { displayFileSize } from '../services/displayFileSize';
 import { downloadFileToDesktop } from '../services/downloadFile';
+import { useAuth, useUser } from "@clerk/clerk-react";
 
 
 
@@ -14,12 +15,26 @@ const MyFiles: React.FC = () => {
   const [myFiles, setMyFiles] = useState<MyFile[]>([]);
   const [myFilesImageBlobs, setMyFilesImageBlobs] = useState<Blob[]>([]);
 
-  useEffect(() => {
-    getFiles(localPersonId).then((data) => setMyFiles(data));
-    console.log("HZBCAK useEffect called.")
-    // getSingleFile(myFiles[0].bucket, myFiles[0].key).then((data) => console.log("getSingleFile output", data));
+  const { getToken } = useAuth();
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
 
-  }, []);
+  useEffect(() => {
+    const fetchSessionToken = async () => {
+      const token = await getToken();
+      console.log("Session token:", token);
+      setSessionToken(token);
+    };
+
+    fetchSessionToken();
+  }, [getToken]);
+
+
+
+  useEffect(() => {
+    if (sessionToken) {
+      getFiles(localPersonId, sessionToken).then((data) => setMyFiles(data));
+    }
+  }, [sessionToken]);
 
 
   useEffect(() => {

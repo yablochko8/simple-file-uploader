@@ -6,6 +6,7 @@ import { S3 } from "@aws-sdk/client-s3";
 import dotenv from "dotenv";
 import { saveUploadDetailsToDB, seeFilesInStorage } from "./utils/dbFunctions";
 dotenv.config();
+import { clerkClient } from "@clerk/clerk-sdk-node";
 
 interface MulterRequest extends Request {
   file?: File;
@@ -60,6 +61,20 @@ app.get("/", async (req, res) => {
 
 app.get("/files/person/:personId", async (req, res) => {
   const personId = req.params.personId;
+  const token = req.headers.authorization;
+
+  if (!token) {
+    return res.status(401).json({ error: "No token provided" });
+  }
+
+  // try {
+  //   const sessionId = req.headers["x-session-id"] as string;
+  //   const cleanToken = token.split(" ")[1];
+  //   await clerkClient.sessions.verifySession(sessionId, cleanToken);
+  // } catch (error) {
+  //   console.error("Error verifying token:", error);
+  //   return res.status(401).json({ error: "Invalid token" });
+  // }
   console.log(`/files/person/${personId} GET endpoint called.`);
 
   const data = await seeFilesInStorage(Number(personId));

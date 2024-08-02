@@ -9,11 +9,15 @@ export type MyFile = {
   personId: number;
 };
 
-export const getFiles = async (personId: number): Promise<MyFile[]> => {
+export const getFiles = async (
+  personId: number,
+  token: string
+): Promise<MyFile[]> => {
   const response = await fetch(`${serverPath}/files/person/${personId}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
     },
   });
   const json = await response.json();
