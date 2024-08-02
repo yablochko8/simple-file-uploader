@@ -6,7 +6,12 @@ import { S3 } from "@aws-sdk/client-s3";
 import dotenv from "dotenv";
 import { saveUploadDetailsToDB, seeFilesInStorage } from "./utils/dbFunctions";
 dotenv.config();
-import { clerkClient } from "@clerk/clerk-sdk-node";
+import {
+  clerkClient,
+  ClerkExpressWithAuth,
+  LooseAuthProp,
+  WithAuthProp,
+} from "@clerk/clerk-sdk-node";
 
 interface MulterRequest extends Request {
   file?: File;
@@ -20,6 +25,12 @@ const accessKeyId = process.env.AWS_ACCESS_KEY_ID || "";
 const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY || "";
 
 const app = express();
+
+declare global {
+  namespace Express {
+    interface Request extends LooseAuthProp {}
+  }
+}
 
 app.use(express.json());
 app.use(cors());
@@ -59,30 +70,38 @@ app.get("/", async (req, res) => {
   res.json({ buckets: bucketNames });
 });
 
-app.get("/files/person/:personId", async (req, res) => {
-  const personId = req.params.personId;
-  const token = req.headers.authorization;
+app.get(
+  "/files/person/:personId",
+  ClerkExpressWithAuth({
+    // Add options here
+    // See the Middleware options section for more details
+    // https://clerk.com/docs/backend-requests/handling/nodejs
+  }),
+  async (req: WithAuthProp<Request>, res: Response) => {
+    const personId = req.params.personId;
+    const token = req.headers.authorization;
 
-  if (!token) {
-    return res.status(401).json({ error: "No token provided" });
+    if (!token) {
+      return res.status(401).json({ error: "No token provided" });
+    }
+
+    try {
+      const sessionId = req.headers["x-session-id"] as string;
+      const sessionToken = token.split(" ")[1];
+      await clerkClient.sessions.verifySession(sessionId, sessionToken);
+    } catch (error) {
+      console.error("Error verifying token:", error);
+      return res.status(401).json({ error: "Invalid token" });
+    }
+    console.log(`/files/person/${personId} GET endpoint called.`);
+
+    const data = await seeFilesInStorage(Number(personId));
+    if (data) {
+      console.log("Response from Database was successful.");
+    }
+    res.json({ myfiles: data });
   }
-
-  // try {
-  //   const sessionId = req.headers["x-session-id"] as string;
-  //   const cleanToken = token.split(" ")[1];
-  //   await clerkClient.sessions.verifySession(sessionId, cleanToken);
-  // } catch (error) {
-  //   console.error("Error verifying token:", error);
-  //   return res.status(401).json({ error: "Invalid token" });
-  // }
-  console.log(`/files/person/${personId} GET endpoint called.`);
-
-  const data = await seeFilesInStorage(Number(personId));
-  if (data) {
-    console.log("Response from Database was successful.");
-  }
-  res.json({ myfiles: data });
-});
+);
 
 app.post(
   "/upload",
@@ -110,7 +129,6 @@ app.post("/download/:bucket/:key", async (req, res) => {
     const fileBuffer = await data.Body?.transformToByteArray();
     res.end(fileBuffer, "binary");
   }
-  // res.send(data);
 });
 
 // TEST ENDPOINT PROBABABLY NOT NEEDED
@@ -123,9 +141,6 @@ app.get("/files/:bucketName", async (req, res) => {
   if (data) {
     console.log("Response from AWS successfully recorded.");
   }
-  console.log("##############################");
-
-  console.log("data object is", data);
   const bucketNames = data.Buckets?.map((bucket) => bucket.Name) || [];
   console.log("bucketNames", bucketNames);
   res.json({ buckets: bucketNames });
@@ -140,6 +155,11 @@ app.post("/newmessage", async (req, res) => {
   const newMessage = req.body.message;
   storedValues.push(newMessage);
   res.json({ messages: storedValues });
+});
+
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(401).send("Unauthenticated!");
 });
 
 app.listen(PORT, () => {
