@@ -1,14 +1,16 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
-import multer, { FileArray, File } from "multer";
+import multer from "multer";
 import multerS3 from "multer-s3";
 import { S3 } from "@aws-sdk/client-s3";
 import dotenv from "dotenv";
 import { saveUploadDetailsToDB, seeFilesInStorage } from "./utils/dbFunctions";
 dotenv.config();
+
 import {
   clerkClient,
   ClerkExpressWithAuth,
+  ClerkMiddlewareOptions,
   LooseAuthProp,
   WithAuthProp,
 } from "@clerk/clerk-sdk-node";
@@ -24,6 +26,14 @@ const regionName = "us-east-2";
 const accessKeyId = process.env.AWS_ACCESS_KEY_ID || "";
 const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY || "";
 
+const clerkOptions: ClerkMiddlewareOptions = {
+  // publishableKey: process.env.CLERK_PUBLISHABLE_KEY || "",
+  // secretKey: process.env.CLERK_SECRET_KEY || "",
+};
+
+const publishableKey = process.env.CLERK_PUBLISHABLE_KEY || "";
+const secretKey = process.env.CLERK_SECRET_KEY || "";
+
 const app = express();
 
 declare global {
@@ -32,6 +42,10 @@ declare global {
   }
 }
 
+// req.user = await prisma.user.findUnique({ where: { id: req.auth.userId } });
+
+// req.auth = { ...abunchofusefulclerkinfo }
+app.use(ClerkExpressWithAuth());
 app.use(express.json());
 app.use(cors());
 
@@ -72,23 +86,25 @@ app.get("/", async (req, res) => {
 
 app.get(
   "/files/person/:personId",
-  ClerkExpressWithAuth({
-    // Add options here
-    // See the Middleware options section for more details
-    // https://clerk.com/docs/backend-requests/handling/nodejs
-  }),
+  (req, res, next) => {
+    console.log("files/person/:personId middleware called");
+    next();
+  },
+  // ClerkExpressWithAuth(clerkOptions),
   async (req: WithAuthProp<Request>, res: Response) => {
+    console.log("/files/person/:personId called");
     const personId = req.params.personId;
     const token = req.headers.authorization;
+    console.log("token", token);
 
+    // FOR NOW - RETURN AN EMPTY ARRAY IF NO TOKEN IS PROVIDED
     if (!token) {
-      return res.status(401).json({ error: "No token provided" });
+      return res.json({ myfiles: [] });
+      // return res.status(401).json({ error: "No token provided" });
     }
 
     try {
-      const sessionId = req.headers["x-session-id"] as string;
-      const sessionToken = token.split(" ")[1];
-      await clerkClient.sessions.verifySession(sessionId, sessionToken);
+      console.log("user", req.auth.userId);
     } catch (error) {
       console.error("Error verifying token:", error);
       return res.status(401).json({ error: "Invalid token" });

@@ -3,7 +3,7 @@ import { getFiles, MyFile } from '../services/getFiles';
 import { getSingleFile } from '../services/getSingleFile';
 import { displayFileSize } from '../services/displayFileSize';
 import { downloadFileToDesktop } from '../services/downloadFile';
-import { useAuth, useUser } from "@clerk/clerk-react";
+import { useAuth } from "@clerk/clerk-react";
 
 
 
@@ -38,7 +38,7 @@ const MyFiles: React.FC = () => {
 
 
   useEffect(() => {
-    if (myFiles.length > 0) {
+    if (myFiles && myFiles.length > 0) {
       Promise.all(myFiles.map(file => getSingleFile(file.bucket, file.key)))
         .then(blobs => {
           const validBlobs = blobs.filter(blob => blob !== undefined) as Blob[];
@@ -54,7 +54,7 @@ const MyFiles: React.FC = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-[80vw] bg-gray-100">
       This is the MyFiles page
-      {myFiles.map((file, index) => (
+      {myFiles && myFiles.map((file, index) => (
         <div key={file.key} className="bg-white shadow-md rounded-lg p-4 mb-4 w-full max-w-md flex items-center">
           <div className="mr-4 w-24 h-24 flex-shrink-0">
             {myFilesImageBlobs.length > index && (
