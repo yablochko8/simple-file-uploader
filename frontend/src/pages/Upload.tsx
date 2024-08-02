@@ -1,4 +1,5 @@
 import React from 'react';
+import { sendFileForUpload } from '../services/sendFileForUpload';
 
 /**
  * Upload page: shows a rounded box that a user can drag and drop a file into and click upload
@@ -45,10 +46,12 @@ const Upload: React.FC = () => {
     }
   };
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (file) {
       // TODO: Implement file upload logic
-      console.log("Uploading file:", file.name, file.size, "(FAKE NEWS)");
+      console.log("Attempting to upload file:", file.name, file.size, "(FAKE NEWS)");
+      const response = await sendFileForUpload(file);
+      console.log("The server response was:", response);
     }
   };
 
