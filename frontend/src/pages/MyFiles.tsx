@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getFiles, MyFile } from '../services/getFiles';
 import { getSingleFile } from '../services/getSingleFile';
+import { displayFileSize } from '../services/displayFileSize';
 
 
 
@@ -14,7 +15,7 @@ const MyFiles: React.FC = () => {
 
   useEffect(() => {
     getFiles(localPersonId).then((data) => setMyFiles(data));
-    console.log("HBCAK this stage reached.")
+    console.log("HZBCAK useEffect called.")
     // getSingleFile(myFiles[0].bucket, myFiles[0].key).then((data) => console.log("getSingleFile output", data));
 
   }, []);
@@ -42,13 +43,10 @@ const MyFiles: React.FC = () => {
           {myFilesImageBlobs.length > index && (
             <img src={URL.createObjectURL(myFilesImageBlobs[index])} alt={file.originalname} />
           )}
-          <h3 className="text-lg font-semibold mb-2">{file.originalname}</h3>
+          <div className="text-lg font-semibold mb-2">{file.originalname}</div>
           <div className="grid grid-cols-2 gap-2 text-sm">
-            <p><span className="font-medium">Size:</span> {(file.size / 1024).toFixed(2)} KB</p>
+            <p><span className="font-medium">Size:</span> {displayFileSize(file.size)}</p>
             <p><span className="font-medium">Type:</span> {file.mimetype}</p>
-            <p><span className="font-medium">Bucket:</span> {file.bucket}</p>
-            <p><span className="font-medium">Key:</span> {file.key}</p>
-            <p><span className="font-medium">Person ID:</span> {file.personId}</p>
           </div>
         </div>
       ))}

@@ -4,7 +4,7 @@ import multer, { FileArray, File } from "multer";
 import multerS3 from "multer-s3";
 import { S3 } from "@aws-sdk/client-s3";
 import dotenv from "dotenv";
-import { newFileInStorage, seeFilesInStorage } from "./utils/dbFunctions";
+import { saveUploadDetailsToDB, seeFilesInStorage } from "./utils/dbFunctions";
 dotenv.config();
 
 interface MulterRequest extends Request {
@@ -76,9 +76,7 @@ app.post(
     // Console log the file details
     if (req.file) {
       console.log("Will now attempt to send to database");
-      const newItem = await newFileInStorage(req.file, 1);
-      console.log("database response:", newItem);
-      console.log("/upload endpoint... File details:", req.file);
+      const newItem = await saveUploadDetailsToDB(req.file, 1);
     } else {
       console.log("/upload endpoint... No file found.");
     }
@@ -93,7 +91,6 @@ app.post("/download/:bucket/:key", async (req, res) => {
   const key = req.params.key;
   console.log(`/download/${bucket}/${key} POST endpoint called.`);
   const data = await s3.getObject({ Bucket: bucket, Key: key });
-  console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
   if (data.Body) {
     const fileBuffer = await data.Body?.transformToByteArray();
     res.end(fileBuffer, "binary");
