@@ -48,7 +48,7 @@ const Upload: React.FC = () => {
   const handleUpload = () => {
     if (file) {
       // TODO: Implement file upload logic
-      console.log("Uploading file:", file.name, "(FAKE NEWS)");
+      console.log("Uploading file:", file.name, file.size, "(FAKE NEWS)");
     }
   };
 
@@ -60,14 +60,14 @@ const Upload: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex flex-col items-center justify-center min-h-[80vw] bg-gray-100">
       <div
-        className={`w-64 h-64 border-4 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer ${isDragging ? 'border-blue-500 bg-blue-100' : 'border-gray-300'
+        className={`w-[80%] h-[60vh] border-4 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer ${isDragging ? 'border-blue-500 bg-blue-100' : 'border-gray-300'
           }`}
         {...dragFunctions}
       >
-        <span className="text-lg mb-2">Drag & Drop File Here</span>
-        <span className="text-sm text-gray-500">or</span>
+        <div className="text-lg mb-2">Drag & Drop File Here</div>
+        <div className="text-sm text-gray-500">or</div>
         <label className="mt-2 cursor-pointer bg-blue-500 text-white px-4 py-2 rounded">
           Select File
           <input type="file" className="hidden" onChange={handleFileChange} />
