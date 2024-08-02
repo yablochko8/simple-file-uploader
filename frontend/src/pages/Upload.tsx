@@ -10,13 +10,19 @@ const Upload: React.FC = () => {
   const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
     console.log('Dragging (enter)');
     e.preventDefault();
+    e.stopPropagation();
     setIsDragging(true);
   };
 
   const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
     console.log('Dragging (leave)');
     e.preventDefault();
-    setIsDragging(false);
+    e.stopPropagation();
+    // Vital: must confirm the element the dragging cursor has moved onto (relatedTarget) is
+    // not a child of the element it is moving off of (currentTarget)
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDragging(false);
+    }
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -46,18 +52,22 @@ const Upload: React.FC = () => {
     }
   };
 
+  const dragFunctions = {
+    onDragEnter: handleDragEnter,
+    onDragLeave: handleDragLeave,
+    onDragOver: handleDragOver,
+    onDrop: handleDrop,
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
       <div
         className={`w-64 h-64 border-4 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer ${isDragging ? 'border-blue-500 bg-blue-100' : 'border-gray-300'
           }`}
-        onDragEnter={handleDragEnter}
-        onDragLeave={handleDragLeave}
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
+        {...dragFunctions}
       >
-        <p className="text-lg mb-2">Drag & Drop File Here</p>
-        <p className="text-sm text-gray-500">or</p>
+        <span className="text-lg mb-2">Drag & Drop File Here</span>
+        <span className="text-sm text-gray-500">or</span>
         <label className="mt-2 cursor-pointer bg-blue-500 text-white px-4 py-2 rounded">
           Select File
           <input type="file" className="hidden" onChange={handleFileChange} />
