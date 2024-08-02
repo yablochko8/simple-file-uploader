@@ -3,18 +3,13 @@ import cors from "cors";
 import multer from "multer";
 import multerS3 from "multer-s3";
 import { S3 } from "@aws-sdk/client-s3";
-import dotenv from "dotenv";
 import { saveUploadDetailsToDB, seeFilesInStorage } from "./utils/dbFunctions";
+import { ClerkExpressWithAuth, LooseAuthProp } from "@clerk/clerk-sdk-node";
+import { optionalUser } from "./services/authMiddleware";
+import dotenv from "dotenv";
 dotenv.config();
 
-import {
-  clerkClient,
-  ClerkExpressWithAuth,
-  ClerkMiddlewareOptions,
-  LooseAuthProp,
-  WithAuthProp,
-} from "@clerk/clerk-sdk-node";
-import { optionalUser } from "./services/authMiddleware";
+const personId = 2;
 
 interface MulterRequest extends Request {
   file?: File;
@@ -26,11 +21,6 @@ const bucketName = "simple-file-uploader-jcc8aamx";
 const regionName = "us-east-2";
 const accessKeyId = process.env.AWS_ACCESS_KEY_ID || "";
 const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY || "";
-
-const clerkOptions: ClerkMiddlewareOptions = {
-  // publishableKey: process.env.CLERK_PUBLISHABLE_KEY || "",
-  // secretKey: process.env.CLERK_SECRET_KEY || "",
-};
 
 const publishableKey = process.env.CLERK_PUBLISHABLE_KEY || "";
 const secretKey = process.env.CLERK_SECRET_KEY || "";
@@ -48,7 +38,7 @@ declare global {
 // req.auth = { ...abunchofusefulclerkinfo }
 app.use(cors());
 app.use(express.json());
-app.use(ClerkExpressWithAuth(clerkOptions));
+app.use(ClerkExpressWithAuth());
 app.use(optionalUser);
 
 const s3 = new S3({
@@ -92,33 +82,22 @@ app.get(
     console.log("files/person/:personId middleware called");
     next();
   },
-  ClerkExpressWithAuth(clerkOptions),
   async (req, res) => {
     console.log("/files/person/:personId called");
+    console.log("req.auth is", req.auth?.userId);
+
+    if (!req.auth?.userId) {
+      console.log("No auth found from Clerk token provided");
+      // Alt option: return an empty array if no token provided
+      // return res.json({ myfiles: [] });
+      return res.status(401).json({ error: "No token provided" });
+    }
     const personId = req.params.personId;
-    const token = req.headers.authorization;
-    if (token) {
-      console.log("Yes token found here");
-    }
-    console.log("req.auth is", req.auth);
-
-    // FOR NOW - RETURN AN EMPTY ARRAY IF NO TOKEN IS PROVIDED
-    if (!token) {
-      return res.json({ myfiles: [] });
-      // return res.status(401).json({ error: "No token provided" });
-    }
-
-    // try {
-    //   console.log("user", req.auth.userId);
-    // } catch (error) {
-    //   console.error("Error verifying token:", error);
-    //   return res.status(401).json({ error: "Invalid token" });
-    // }
     console.log(`/files/person/${personId} GET endpoint called.`);
 
     const data = await seeFilesInStorage(Number(personId));
     if (data) {
-      console.log("Response from Database was successful.");
+      console.log(`Response from Database. ${data.length} files found.`);
     }
     res.json({ myfiles: data });
   }
@@ -131,11 +110,11 @@ app.post(
     // Console log the file details
     if (req.file) {
       console.log("Will now attempt to send to database");
-      const newItem = await saveUploadDetailsToDB(req.file, 1);
+      const newItem = await saveUploadDetailsToDB(req.file, personId);
+      console.log("Upload recored in data base with id", newItem.id);
     } else {
-      console.log("/upload endpoint... No file found.");
+      res.status(400).json({ error: "No file found in request." });
     }
-
     res.send({ message: "File uploaded" });
   }
 );
