@@ -1,10 +1,15 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import cors from "cors";
-import multer from "multer";
+import multer, { FileArray, File } from "multer";
 import multerS3 from "multer-s3";
 import { S3 } from "@aws-sdk/client-s3";
 import dotenv from "dotenv";
+import { newFileInStorage } from "./utils/dbFunctions";
 dotenv.config();
+
+interface MulterRequest extends Request {
+  file?: File;
+}
 
 export const PORT = 4101;
 
@@ -68,9 +73,23 @@ app.get("/files/:bucketName", async (req, res) => {
   res.json({ buckets: bucketNames });
 });
 
-app.post("/upload", multerUpload.single("thing"), async (req, res) => {
-  res.send({ message: "File uploaded" });
-});
+app.post(
+  "/upload",
+  multerUpload.single("thing"),
+  async (req: MulterRequest, res: Response) => {
+    // Console log the file details
+    if (req.file) {
+      console.log("Will now attempt to send to database");
+      const newItem = await newFileInStorage(req.file, 1);
+      console.log("database response:", newItem);
+      console.log("/upload endpoint... File details:", req.file);
+    } else {
+      console.log("/upload endpoint... No file found.");
+    }
+
+    res.send({ message: "File uploaded" });
+  }
+);
 
 // OLD BOILERPLATE MATERIAL
 

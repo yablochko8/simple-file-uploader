@@ -27,10 +27,14 @@ model Person {
   @@map("person")
 }
 
+
 model FileInStorage {
   id            Int       @id @default(autoincrement())
-  name          String
-  storagePath   String?
+  originalname  String
+  size          Int
+  mimetype      String
+  bucket        String
+  key           String
   createdAt     DateTime  @default(now())
   updatedAt     DateTime? @updatedAt
 
