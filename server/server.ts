@@ -4,7 +4,7 @@ import multer, { FileArray, File } from "multer";
 import multerS3 from "multer-s3";
 import { S3 } from "@aws-sdk/client-s3";
 import dotenv from "dotenv";
-import { newFileInStorage } from "./utils/dbFunctions";
+import { newFileInStorage, seeFilesInStorage } from "./utils/dbFunctions";
 dotenv.config();
 
 interface MulterRequest extends Request {
@@ -59,18 +59,16 @@ app.get("/", async (req, res) => {
   res.json({ buckets: bucketNames });
 });
 
-app.get("/files/:bucketName", async (req, res) => {
-  const bucketName = req.params.bucketName;
-  console.log(`/files/${bucketName} GET endpoint called.`);
+app.get("/files/person/:personId", async (req, res) => {
+  const personId = req.params.personId;
+  console.log(`/files/person/${personId} GET endpoint called.`);
 
-  const data = await s3.listBuckets();
+  const data = await seeFilesInStorage(Number(personId));
   if (data) {
-    console.log("Response from AWS successfully recorded.");
+    console.log("Response from Database was successful.");
   }
   console.log("data object is", data);
-  const bucketNames = data.Buckets?.map((bucket) => bucket.Name) || [];
-  console.log("bucketNames", bucketNames);
-  res.json({ buckets: bucketNames });
+  res.json({ myfiles: data });
 });
 
 app.post(
@@ -90,6 +88,22 @@ app.post(
     res.send({ message: "File uploaded" });
   }
 );
+
+// TEST ENDPOINT PROBABABLY NOT NEEDED
+
+app.get("/files/:bucketName", async (req, res) => {
+  const bucketName = req.params.bucketName;
+  console.log(`/files/${bucketName} GET endpoint called.`);
+
+  const data = await s3.listBuckets();
+  if (data) {
+    console.log("Response from AWS successfully recorded.");
+  }
+  console.log("data object is", data);
+  const bucketNames = data.Buckets?.map((bucket) => bucket.Name) || [];
+  console.log("bucketNames", bucketNames);
+  res.json({ buckets: bucketNames });
+});
 
 // OLD BOILERPLATE MATERIAL
 

@@ -1,6 +1,15 @@
 import { File } from "multer";
 import { dbClient } from "./dbClient";
 
+export const seeFilesInStorage = async (personId: number) => {
+  const allItems = await dbClient.fileInStorage.findMany({
+    where: {
+      personId,
+    },
+  });
+  return allItems;
+};
+
 export const newFileInStorage = async (file: File, personId: number) => {
   const { originalname, bucket, key, size, mimetype } = file;
 
