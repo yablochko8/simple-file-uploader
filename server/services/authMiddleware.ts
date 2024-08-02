@@ -72,13 +72,13 @@ export const optionalUser: RequestHandler = async (req, res, next) => {
       // modify the request context to include a user property
       req.user = user;
     } else {
-      //If the user is not found in the database, fetch the user from Clerk
+      // If the user is not found in the database, fetch the user from Clerk
       const clerkUser = await clerkClient.users.getUser(clerkId);
       // Extract the email address from the Clerk user data
       // we need to add it as data for the User model
       const email = clerkUser.emailAddresses[0].emailAddress;
       // create a new user in the database with the Clerk user ID and email
-      //extracted from above
+      // extracted from above
 
       const firstName: string = clerkUser.firstName ?? "";
       const lastName: string = clerkUser.lastName ?? "";

@@ -9,11 +9,8 @@ export type MyFile = {
   personId: number;
 };
 
-export const getFiles = async (
-  personId: number,
-  token: string
-): Promise<MyFile[]> => {
-  const response = await fetch(`${serverPath}/files/person/${personId}`, {
+export const getFiles = async (token: string): Promise<MyFile[]> => {
+  const response = await fetch(`${serverPath}/myfiles`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",

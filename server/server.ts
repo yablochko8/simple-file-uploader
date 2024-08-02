@@ -77,13 +77,13 @@ app.get("/", async (req, res) => {
 });
 
 app.get(
-  "/files/person/:personId",
+  "/myfiles",
   (req, res, next) => {
-    console.log("files/person/:personId middleware called");
+    console.log("myfiles middleware called");
     next();
   },
   async (req, res) => {
-    console.log("/files/person/:personId called");
+    console.log("/myfiles called");
     console.log("req.auth is", req.auth?.userId);
 
     if (!req.auth?.userId) {
@@ -92,8 +92,8 @@ app.get(
       // return res.json({ myfiles: [] });
       return res.status(401).json({ error: "No token provided" });
     }
-    const personId = req.params.personId;
-    console.log(`/files/person/${personId} GET endpoint called.`);
+    const personId = req.user?.id;
+    console.log(`/myfiles GET endpoint called.`);
 
     const data = await seeFilesInStorage(Number(personId));
     if (data) {
