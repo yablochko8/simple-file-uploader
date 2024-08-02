@@ -14,6 +14,7 @@ import {
   LooseAuthProp,
   WithAuthProp,
 } from "@clerk/clerk-sdk-node";
+import { optionalUser } from "./services/authMiddleware";
 
 interface MulterRequest extends Request {
   file?: File;
@@ -45,9 +46,10 @@ declare global {
 // req.user = await prisma.user.findUnique({ where: { id: req.auth.userId } });
 
 // req.auth = { ...abunchofusefulclerkinfo }
-app.use(ClerkExpressWithAuth());
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
+app.use(ClerkExpressWithAuth(clerkOptions));
+app.use(optionalUser);
 
 const s3 = new S3({
   region: regionName,
@@ -90,12 +92,15 @@ app.get(
     console.log("files/person/:personId middleware called");
     next();
   },
-  // ClerkExpressWithAuth(clerkOptions),
-  async (req: WithAuthProp<Request>, res: Response) => {
+  ClerkExpressWithAuth(clerkOptions),
+  async (req, res) => {
     console.log("/files/person/:personId called");
     const personId = req.params.personId;
     const token = req.headers.authorization;
-    console.log("token", token);
+    if (token) {
+      console.log("Yes token found here");
+    }
+    console.log("req.auth is", req.auth);
 
     // FOR NOW - RETURN AN EMPTY ARRAY IF NO TOKEN IS PROVIDED
     if (!token) {
@@ -103,12 +108,12 @@ app.get(
       // return res.status(401).json({ error: "No token provided" });
     }
 
-    try {
-      console.log("user", req.auth.userId);
-    } catch (error) {
-      console.error("Error verifying token:", error);
-      return res.status(401).json({ error: "Invalid token" });
-    }
+    // try {
+    //   console.log("user", req.auth.userId);
+    // } catch (error) {
+    //   console.error("Error verifying token:", error);
+    //   return res.status(401).json({ error: "Invalid token" });
+    // }
     console.log(`/files/person/${personId} GET endpoint called.`);
 
     const data = await seeFilesInStorage(Number(personId));

@@ -7,7 +7,7 @@ import { useAuth } from "@clerk/clerk-react";
 
 
 
-const localPersonId = 1;
+const hardcodePersonId = 2;
 /**
  * MyFiles page: shows you all your files
  */
@@ -32,7 +32,7 @@ const MyFiles: React.FC = () => {
 
   useEffect(() => {
     if (sessionToken) {
-      getFiles(localPersonId, sessionToken).then((data) => setMyFiles(data));
+      getFiles(hardcodePersonId, sessionToken).then((data) => setMyFiles(data));
     }
   }, [sessionToken]);
 
