@@ -21,13 +21,13 @@ model Person {
   updatedAt     DateTime? @updatedAt
 
   // relationships
-  myFiles       File[]
+  myFiles       FileInStorage[]
   sharedFiles   FilePersonShared[]
 
   @@map("person")
 }
 
-model File {
+model FileInStorage {
   id            Int       @id @default(autoincrement())
   name          String
   storagePath   String?
@@ -41,7 +41,7 @@ model File {
   owner         Person @relation(fields: [personId], references: [id])
   sharedWith    FilePersonShared[]
 
-  @@map("file")
+  @@map("fileinstorage")
 }
 
 // Many-to-many table for Person and File caused by SHARING
@@ -52,7 +52,7 @@ model FilePersonShared {
   createdAt     DateTime  @default(now())
 
   // relationships
-  file          File @relation(fields: [fileId], references: [id])
+  file          FileInStorage @relation(fields: [fileId], references: [id])
   person        Person @relation(fields: [personId], references: [id])
 
   @@map("file_person_shared")

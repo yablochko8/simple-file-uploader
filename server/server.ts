@@ -54,11 +54,25 @@ app.get("/", async (req, res) => {
   res.json({ buckets: bucketNames });
 });
 
+app.get("/files/:bucketName", async (req, res) => {
+  const bucketName = req.params.bucketName;
+  console.log(`/files/${bucketName} GET endpoint called.`);
+
+  const data = await s3.listBuckets();
+  if (data) {
+    console.log("Response from AWS successfully recorded.");
+  }
+  console.log("data object is", data);
+  const bucketNames = data.Buckets?.map((bucket) => bucket.Name) || [];
+  console.log("bucketNames", bucketNames);
+  res.json({ buckets: bucketNames });
+});
+
 app.post("/upload", multerUpload.single("thing"), async (req, res) => {
   res.send({ message: "File uploaded" });
 });
 
-// BOILERPLATE MATERIAL
+// OLD BOILERPLATE MATERIAL
 
 const storedValues: string[] = [];
 
