@@ -106,7 +106,6 @@ app.post(
   multerUpload.single("thing"),
   async (req: MulterRequest, res: Response) => {
     const personId = req.user?.id;
-    // const personId = 2;
     if (!personId) {
       const reqFields = Object.keys(req);
       console.log("No user ID found. Req object in full was:", reqFields);
