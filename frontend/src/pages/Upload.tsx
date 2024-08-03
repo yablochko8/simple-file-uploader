@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { sendFileForUpload } from '../services/sendFileForUpload';
+import { useAuth } from '@clerk/clerk-react';
 
 /**
  * Upload page: shows a rounded box that a user can drag and drop a file into and click upload
@@ -7,6 +8,18 @@ import { sendFileForUpload } from '../services/sendFileForUpload';
 const Upload: React.FC = () => {
   const [file, setFile] = React.useState<File | null>(null);
   const [isDragging, setIsDragging] = React.useState(false);
+
+  const { getToken } = useAuth();
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchSessionToken = async () => {
+      const token = await getToken();
+      setSessionToken(token);
+    };
+
+    fetchSessionToken();
+  }, [getToken]);
 
   const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
     console.log('Dragging (enter)');
@@ -47,12 +60,17 @@ const Upload: React.FC = () => {
   };
 
   const handleUpload = async () => {
-    if (file) {
-      // TODO: Implement file upload logic
-      console.log("Attempting to upload file:", file.name, file.size);
-      const response = await sendFileForUpload(file);
-      console.log("The server response was:", response);
+    if (!sessionToken) {
+      console.error("No session token found.");
+      return;
     }
+    if (!file) {
+      console.error("No file found.");
+      return;
+    }
+    console.log("Attempting to upload file:", file.name, file.size);
+    const response = await sendFileForUpload(sessionToken, file);
+    console.log("The server response was:", response);
   };
 
   const dragFunctions = {

@@ -3,10 +3,10 @@ import { getFiles, MyFile } from '../services/getFiles';
 import { getSingleFile } from '../services/getSingleFile';
 import { displayFileSize } from '../services/displayFileSize';
 import { downloadFileToDesktop } from '../services/downloadFile';
+import { useAuth } from "@clerk/clerk-react";
 
 
 
-const localPersonId = 1;
 /**
  * MyFiles page: shows you all your files
  */
@@ -14,16 +14,30 @@ const MyFiles: React.FC = () => {
   const [myFiles, setMyFiles] = useState<MyFile[]>([]);
   const [myFilesImageBlobs, setMyFilesImageBlobs] = useState<Blob[]>([]);
 
-  useEffect(() => {
-    getFiles(localPersonId).then((data) => setMyFiles(data));
-    console.log("HZBCAK useEffect called.")
-    // getSingleFile(myFiles[0].bucket, myFiles[0].key).then((data) => console.log("getSingleFile output", data));
-
-  }, []);
-
+  const { getToken } = useAuth();
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
 
   useEffect(() => {
-    if (myFiles.length > 0) {
+    const fetchSessionToken = async () => {
+      const token = await getToken();
+      console.log("Session token:", token);
+      setSessionToken(token);
+    };
+
+    fetchSessionToken();
+  }, [getToken]);
+
+
+
+  useEffect(() => {
+    if (sessionToken) {
+      getFiles(sessionToken).then((data) => setMyFiles(data));
+    }
+  }, [sessionToken]);
+
+
+  useEffect(() => {
+    if (myFiles && myFiles.length > 0) {
       Promise.all(myFiles.map(file => getSingleFile(file.bucket, file.key)))
         .then(blobs => {
           const validBlobs = blobs.filter(blob => blob !== undefined) as Blob[];
@@ -39,7 +53,7 @@ const MyFiles: React.FC = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-[80vw] bg-gray-100">
       This is the MyFiles page
-      {myFiles.map((file, index) => (
+      {myFiles && myFiles.map((file, index) => (
         <div key={file.key} className="bg-white shadow-md rounded-lg p-4 mb-4 w-full max-w-md flex items-center">
           <div className="mr-4 w-24 h-24 flex-shrink-0">
             {myFilesImageBlobs.length > index && (

@@ -3,6 +3,8 @@ import "./App.css";
 import Home from "./pages/Home";
 import Upload from "./pages/Upload";
 import MyFiles from './pages/MyFiles';
+import { SignedIn, SignedOut, UserButton } from "@clerk/clerk-react";
+import { SignedOutMessage } from './pages/SignedOutMessage';
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = React.useState(window.location.pathname);
@@ -36,14 +38,24 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="bg-gray-200 min-h-screen min-w-[80vw]">
-      <nav className="flex justify-evenly bg-gray-300 p-5 mb-5">
-        <button onClick={() => navigate('/')}>Home</button>
-        <button onClick={() => navigate('/myfiles')}>My Files</button>
-        <button onClick={() => navigate('/upload')}>Upload</button>
-      </nav>
-      <PageComponent />
-    </div>
+    <>
+      <div className="bg-gray-200 min-h-screen min-w-[80vw]">
+        <nav className="flex justify-evenly bg-gray-300 p-5 mb-5">
+          <SignedIn>
+            <button onClick={() => navigate('/')}>Home</button>
+            <button onClick={() => navigate('/myfiles')}>My Files</button>
+            <button onClick={() => navigate('/upload')}>Upload</button>
+            <UserButton />
+          </SignedIn>
+        </nav>
+        <SignedIn>
+          <PageComponent />
+        </SignedIn>
+        <SignedOut>
+          <SignedOutMessage />
+        </SignedOut>
+      </div>
+    </>
   );
 };
 

@@ -1,4 +1,3 @@
-import { File } from "multer";
 import { dbClient } from "./dbClient";
 
 export const seeFilesInStorage = async (personId: number) => {
@@ -10,7 +9,7 @@ export const seeFilesInStorage = async (personId: number) => {
   return allItems;
 };
 
-export const saveUploadDetailsToDB = async (file: File, personId: number) => {
+export const saveUploadDetailsToDB = async (file: any, personId: number) => {
   const { originalname, bucket, key, size, mimetype } = file;
 
   console.log("newFileInStorage function called with file:", file);
