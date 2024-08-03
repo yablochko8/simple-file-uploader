@@ -9,8 +9,6 @@ import { optionalUser } from "./services/authMiddleware";
 import dotenv from "dotenv";
 dotenv.config();
 
-const personId = 2;
-
 interface MulterRequest extends Request {
   file?: File;
 }
@@ -107,6 +105,13 @@ app.post(
   "/upload",
   multerUpload.single("thing"),
   async (req: MulterRequest, res: Response) => {
+    const personId = req.user?.id;
+    // const personId = 2;
+    if (!personId) {
+      const reqFields = Object.keys(req);
+      console.log("No user ID found. Req object in full was:", reqFields);
+      return res.status(401).json({ error: "No user ID found." });
+    }
     // Console log the file details
     if (req.file) {
       console.log("Will now attempt to send to database");
